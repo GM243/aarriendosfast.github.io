@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="theme-color" content="#0d0c0a"/>
+  <title>Arriendos Fast</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <div class="splash" id="splash">
+      <div class="splash-logo">
+        <div class="splash-icon">
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="boltGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff7a2e"/><stop offset="100%" stop-color="#ff5c00"/></linearGradient></defs>
+            <polygon points="30,2 12,30 24,30 22,50 40,22 28,22" fill="url(#boltGrad)"/>
+          </svg>
+        </div>
+        <div class="splash-name">Arriendos<span>Fast</span></div>
+        <div class="splash-tagline">Lo que necesitas, cerca tuyo</div>
+      </div>
+      <div class="splash-loader">
+        <div class="loader-bar"><div class="loader-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="auth-screen" id="authScreen" style="display:none">
+      <div class="auth-logo">
+        <svg width="40" height="40" viewBox="0 0 52 52" fill="none"><defs><linearGradient id="boltA" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff7a2e"/><stop offset="100%" stop-color="#ff5c00"/></linearGradient></defs><polygon points="30,2 12,30 24,30 22,50 40,22 28,22" fill="url(#boltA)"/></svg>
+        <span class="auth-brand">Arriendos<strong>Fast</strong></span>
+      </div>
+
+      <div class="auth-panel" id="panelLogin">
+        <h2 class="auth-title">Bienvenido de vuelta</h2>
+        <p class="auth-sub">Inicia sesión para continuar</p>
+        <div class="auth-demo-badge">🧪 Modo prototipo — cualquier correo y contraseña funcionan</div>
+        <div class="fg"><label>Correo electrónico</label><input type="email" id="loginEmail" placeholder="tu@correo.com"/></div>
+        <div class="fg"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••"/></div>
+        <button class="btn-auth" onclick="hacerLogin()">Iniciar sesión ⚡</button>
+        <p class="auth-switch">¿No tienes cuenta? <button onclick="mostrarPanel('panelReg')">Crear cuenta</button></p>
+      </div>
+
+      <div class="auth-panel" id="panelReg" style="display:none">
+        <h2 class="auth-title">Crear cuenta</h2>
+        <p class="auth-sub">Únete a la comunidad de micro-arriendos</p>
+        <div class="auth-demo-badge">🧪 Modo prototipo — datos de prueba</div>
+        <div class="fg"><label>Nombre completo *</label><input type="text" id="regNombre" placeholder="Tu nombre"/></div>
+        <div class="fg"><label>Correo electrónico *</label><input type="email" id="regEmail" placeholder="tu@correo.com"/></div>
+        <div class="fg"><label>Contraseña *</label><input type="password" id="regPass" placeholder="Mínimo 6 caracteres"/></div>
+        <div class="fg"><label>RUT / Cédula de Identidad *</label><input type="text" id="regRut" placeholder="12.345.678-9"/></div>
+        
+        <div class="fg">
+          <label>Cédula de Identidad (Frente y Reverso) *</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <input type="file" id="regDocFront" accept="image/*" onchange="previewDoc(event, 'front')" style="display:none;"/>
+            <div class="doc-upload-box" id="docFrontBox" onclick="document.getElementById('regDocFront').click()" style="border: 2px dashed var(--border); border-radius: 12px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: var(--card2);">
+              <span style="font-size: 20px;">🪪</span>
+              <span style="font-size: 10px; color: var(--muted);">Frente</span>
+              <img id="regDocFrontPreview" style="display:none; width:100%; height:100%; object-fit:cover; position: absolute; inset:0; border-radius:10px;"/>
+            </div>
+            
+            <input type="file" id="regDocBack" accept="image/*" onchange="previewDoc(event, 'back')" style="display:none;"/>
+            <div class="doc-upload-box" id="docBackBox" onclick="document.getElementById('regDocBack').click()" style="border: 2px dashed var(--border); border-radius: 12px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: var(--card2);">
+              <span style="font-size: 20px;">🪪</span>
+              <span style="font-size: 10px; color: var(--muted);">Reverso</span>
+              <img id="regDocBackPreview" style="display:none; width:100%; height:100%; object-fit:cover; position: absolute; inset:0; border-radius:10px;"/>
+            </div>
+          </div>
+        </div>
+        
+        <div class="fg">
+          <label>Selfie con tu Cédula *</label>
+          <input type="file" id="regSelfie" accept="image/*" onchange="previewDoc(event, 'selfie')" style="display:none;"/>
+          <div class="doc-upload-box" id="docSelfieBox" onclick="document.getElementById('regSelfie').click()" style="border: 2px dashed var(--border); border-radius: 12px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: var(--card2);">
+            <span style="font-size: 20px;">🤳</span>
+            <span style="font-size: 10px; color: var(--muted);">Tomar Selfie</span>
+            <img id="regSelfiePreview" style="display:none; width:100%; height:100%; object-fit:cover; position: absolute; inset:0; border-radius:10px;"/>
+          </div>
+        </div>
+
+        <div class="auth-info-box">
+          <div class="auth-info-title">💳 Comisiones y retenciones</div>
+          <p>La plataforma retiene un <strong>depósito de garantía</strong> temporal en tu tarjeta al iniciar un arriendo. Este monto se libera automáticamente al confirmar la devolución sin daños.</p>
+        </div>
+        <div class="auth-info-box guarantee">
+          <div class="auth-info-title">🛡️ Sistema de garantías</div>
+          <p>Si el objeto es devuelto con daños, el depósito de garantía cubre el costo de reparación o reposición. Ambas partes deben confirmar el estado del objeto al recibirlo y devolverlo.</p>
+        </div>
+
+        <div class="auth-check-wrap">
+          <input type="checkbox" id="regTerms"/>
+          <label for="regTerms">Acepto los términos, la política de comisiones del 15% y el sistema de garantías</label>
+        </div>
+        <button class="btn-auth" onclick="hacerRegistro()">Crear cuenta gratis</button>
+        <p class="auth-switch">¿Ya tienes cuenta? <button onclick="mostrarPanel('panelLogin')">Iniciar sesión</button></p>
+      </div>
+    </div>
+
+    <div class="app-content" id="appContent" style="display:none">
+
+      <div class="tab-view active" id="tab-explorar">
+        <div class="app-header">
+          <div class="header-top">
+            <div class="header-brand">
+              <span class="brand-icon">⚡</span>
+              <span class="brand-name">Arriendos<strong>Fast</strong></span>
+            </div>
+            <button class="header-notif" onclick="mostrarToast('🔔 Sin notificaciones nuevas')">
+              <span>🔔</span><span class="notif-dot"></span>
+            </button>
+          </div>
+          <div class="search-wrap">
+            <span class="search-ico">🔍</span>
+            <input type="text" id="searchInput" placeholder="¿Qué necesitas arrendar?" autocomplete="off"/>
+            <button class="search-clear" id="searchClear" onclick="limpiarBusqueda()">✕</button>
+          </div>
+          <div class="cats-scroll">
+            <button class="cat-pill active" data-cat="todos" onclick="setCategoria(this,'todos')">Todos</button>
+            <button class="cat-pill" data-cat="herramientas" onclick="setCategoria(this,'herramientas')">🔨 Herramientas</button>
+            <button class="cat-pill" data-cat="eventos" onclick="setCategoria(this,'eventos')">🎉 Eventos</button>
+            <button class="cat-pill" data-cat="audio" onclick="setCategoria(this,'audio')">🔊 Audio</button>
+            <button class="cat-pill" data-cat="camping" onclick="setCategoria(this,'camping')">🏕️ Camping</button>
+            <button class="cat-pill" data-cat="jardin" onclick="setCategoria(this,'jardin')">🌿 Jardín</button>
+          </div>
+        </div>
+        <div class="view-toggle">
+          <button class="vt-btn active" id="btnList" onclick="setVista('list')"><span>▤</span> Lista</button>
+          <button class="vt-btn" id="btnMap" onclick="setVista('map')"><span>🗺</span> Mapa</button>
+          <div class="vt-count" id="vtCount">12 objetos</div>
+        </div>
+        <div class="list-view" id="listView">
+          <div class="list-scroll" id="listScroll"></div>
+        </div>
+        <div class="map-view" id="mapView" style="display:none">
+          <div id="leafletMap"></div>
+          <div class="map-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">Objetos cerca tuyo</div>
+            <div class="sheet-scroll" id="sheetScroll"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-view" id="tab-arriendos">
+        <div class="app-header simple">
+          <div class="page-header">
+            <button class="page-back" onclick="setTab('explorar', document.querySelector('[data-tab=explorar]'))">
+              <svg width="24" height="24" viewBox="0 0 52 52" fill="none"><defs><linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff7a2e"/><stop offset="100%" stop-color="#ff5c00"/></linearGradient></defs><polygon points="30,2 12,30 24,30 22,50 40,22 28,22" fill="url(#bg1)"/></svg>
+            </button>
+            <span class="page-title">Mis arriendos</span>
+          </div>
+        </div>
+        <div class="arriendos-content" id="arriendosContent"></div>
+      </div>
+
+      <div class="tab-view" id="tab-mensajes">
+        <div id="mensajesListWrap" style="display:flex; flex-direction:column; height:100%; width:100%;">
+          <div class="app-header simple">
+            <div class="page-header">
+              <button class="page-back" onclick="setTab('explorar', document.querySelector('[data-tab=explorar]'))">
+                <svg width="24" height="24" viewBox="0 0 52 52" fill="none"><defs><linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff7a2e"/><stop offset="100%" stop-color="#ff5c00"/></linearGradient></defs><polygon points="30,2 12,30 24,30 22,50 40,22 28,22" fill="url(#bg2)"/></svg>
+              </button>
+              <span class="page-title">Mensajes</span>
+            </div>
+          </div>
+          <div class="mensajes-list" id="mensajesList"></div>
+        </div>
+
+        <div id="activeChatView" style="display:none; flex-direction:column; height:100%; width:100%; position:absolute; inset:0; background:var(--bg); z-index:100;">
+          <div class="app-header simple chat-active-header">
+            <div class="page-header" style="width:100%; display:flex; align-items:center; gap:10px;">
+              <button class="page-back" onclick="cerrarChat()">
+                <span style="font-size:20px;line-height:1;margin-top:-2px;">←</span>
+              </button>
+              <img id="chatHeaderImg" src="" style="width:36px; height:36px; border-radius:10px; object-fit:cover; background:var(--card2);">
+              <div style="flex:1; min-width:0;">
+                <div id="chatHeaderName" style="font-weight:700; font-family:var(--font-head); font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Nombre</div>
+                <div id="chatHeaderOwner" style="font-size:11px; color:var(--muted);">Dueño</div>
+              </div>
+              <button class="chat-options-btn" onclick="verInfoContacto()" style="background:var(--card2); border:1px solid var(--border); color:var(--text); width:36px; height:36px; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: opacity 0.2s; flex-shrink:0;">
+                •••
+              </button>
+            </div>
+          </div>
+          
+          <div class="chat-messages-area" id="chatMessagesArea"></div>
+
+          <div class="chat-negotiation-panel" id="chatNegoPanel">
+             <div class="nego-header" onclick="toggleNegoPanelBody()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 4px 0;">
+               <div class="nego-title" style="margin-bottom: 0;">🤝 Área de Negociación</div>
+               <span id="negoToggleIcon" style="font-size: 11px; color: var(--muted); font-weight: 800; transition: transform 0.2s;">▼</span>
+             </div>
+             <div id="chatNegoBody" style="display: block; margin-top: 12px;">
+               <div class="nego-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                 <div class="fg" style="grid-column: span 2;">
+                   <label>Tipo de Cobro</label>
+                   <select id="negoTipoCobro" onchange="toggleTipoCobro()" style="background:var(--card2); border:1.5px solid var(--border); color:var(--text); border-radius:13px; padding:10px; font-size:13px; outline:none; width:100%;">
+                     <option value="hora">Cobro por Hora ($ / hr)</option>
+                     <option value="total">Cobro Fijo (Total Completo)</option>
+                   </select>
+                 </div>
+                 <div class="fg" style="grid-column: span 2;">
+                   <label id="negoPrecioLabel">Precio / hora ($)</label>
+                   <input type="number" id="negoPrecio" step="100">
+                 </div>
+                 <div class="fg">
+                   <label>Horas</label>
+                   <input type="number" id="negoHoras" min="0" placeholder="0">
+                 </div>
+                 <div class="fg">
+                   <label>Minutos</label>
+                   <input type="number" id="negoMinutos" min="0" max="59" placeholder="0">
+                 </div>
+               </div>
+               <div class="nego-actions" id="negoActions" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                 <!-- Botones generados dinámicamente -->
+               </div>
+             </div>
+          </div>
+
+          <div class="chat-input-area">
+            <input type="text" id="chatInputText" placeholder="Escribe un mensaje..." autocomplete="off">
+            <button class="chat-send-btn" onclick="enviarMensajeTexto()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-view" id="tab-mapa">
+        <div class="app-header simple">
+          <div class="page-header">
+            <button class="page-back" onclick="setTab('explorar', document.querySelector('[data-tab=explorar]'))">
+              <svg width="24" height="24" viewBox="0 0 52 52" fill="none"><defs><linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff7a2e"/><stop offset="100%" stop-color="#ff5c00"/></linearGradient></defs><polygon points="30,2 12,30 24,30 22,50 40,22 28,22" fill="url(#bg3)"/></svg>
+            </button>
+            <span class="page-title">Mapa de cercanía</span>
+          </div>
+        </div>
+        <div id="fullMap" style="height:calc(100% - 74px); width:100%"></div>
+      </div>
+
+      <div class="tab-view" id="tab-publicar">
+        <div class="app-header simple">
+          <div class="page-header">
+            <button class="page-back" onclick="setTab('explorar', document.querySelector('[data-tab=explorar]'))">
+              <svg width="24" height="24" viewBox="0 0 52 52" fill="none"><defs><linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff7a2e"/><stop offset="100%" stop-color="#ff5c00"/></linearGradient></defs><polygon points="30,2 12,30 24,30 22,50 40,22 28,22" fill="url(#bg4)"/></svg>
+            </button>
+            <span class="page-title">Publicar objeto</span>
+          </div>
+        </div>
+        <div class="form-scroll">
+          <div class="pub-tip-box">
+            <span>💡</span>
+            <span>Fija lo que crees justo. La plataforma retiene el 15% de comisión.</span>
+          </div>
+          <div class="pub-form">
+            <div class="fg">
+              <label>Nombre del objeto *</label>
+              <input type="text" id="pNombre" placeholder="ej: Taladro Bosch 550W"/>
+            </div>
+            <div class="fg">
+              <label>Imagen del objeto</label>
+              <input type="file" id="pImageFile" accept="image/*" onchange="previewImage(event)" style="display:none;"/>
+              <div class="image-upload-box" id="imageUploadBox" onclick="document.getElementById('pImageFile').click()">
+                <span class="upload-icon">📷</span>
+                <span class="upload-text">Subir Imagen</span>
+                <img id="pImagePreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:12px;"/>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Categoría *</label>
+              <select id="pCategoria">
+                <option value="">Selecciona…</option>
+                <option value="herramientas">🔨 Herramientas</option>
+                <option value="eventos">🎉 Artículos de eventos</option>
+                <option value="audio">🔊 Audio y Video</option>
+                <option value="camping">🏕️ Camping</option>
+                <option value="jardin">🌿 Jardín</option>
+              </select>
+            </div>
+            <div class="fg-row">
+              <div class="fg">
+                <label>Precio / hora ($) *</label>
+                <input type="number" id="pPrecio" placeholder="ej: 500" min="200"/>
+              </div>
+              <div class="fg">
+                <label>Depósito garantía</label>
+                <input type="number" id="pDeposito" placeholder="ej: 5000" min="1000"/>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Descripción</label>
+              <textarea id="pDesc" rows="3" placeholder="Condiciones..."></textarea>
+            </div>
+            <div class="fg">
+              <label>Barrio / dirección</label>
+              <input type="text" id="pDir" placeholder="ej: Barrio Italia"/>
+            </div>
+            <div class="fg">
+              <label>Ubicación en el mapa *</label>
+              <div id="pubMap" style="height: 180px; width: 100%; border-radius: 13px; border: 1.5px solid var(--border); overflow: hidden; margin-bottom: 8px;"></div>
+              <input type="hidden" id="pLat"/>
+              <input type="hidden" id="pLng"/>
+              <p class="map-hint" style="font-size:11px; color:var(--muted); margin-top:-4px; margin-bottom: 8px;">Haz clic en el mapa o arrastra el marcador para definir la ubicación exacta.</p>
+            </div>
+            <button class="btn-pub" onclick="publicarObjeto()">Publicar ahora ⚡</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-view" id="tab-perfil">
+        <div class="app-header simple">
+          <div class="page-header">
+            <button class="page-back" onclick="setTab('explorar', document.querySelector('[data-tab=explorar]'))">
+              <svg width="24" height="24" viewBox="0 0 52 52" fill="none"><defs><linearGradient id="bg5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff7a2e"/><stop offset="100%" stop-color="#ff5c00"/></linearGradient></defs><polygon points="30,2 12,30 24,30 22,50 40,22 28,22" fill="url(#bg5)"/></svg>
+            </button>
+            <span class="page-title">Mi perfil</span>
+          </div>
+        </div>
+        <div class="perfil-content">
+          <div class="perfil-avatar">
+            <div class="avatar-circle">👤</div>
+            <div class="avatar-info">
+              <strong id="perfilNombre">Cuenta Nueva</strong>
+              <span>⭐ Recién llegado</span>
+            </div>
+          </div>
+          
+          <div class="perfil-section-title">Mis publicaciones</div>
+          <div class="mis-pubs" id="misPubs">
+            <div class="empty-pubs">Aún no has publicado objetos</div>
+          </div>
+          <div class="perfil-menu">
+            <div class="pm-item" onclick="mostrarInfoPago()"><span>💳</span> Métodos de pago</div>
+            <div class="pm-item" onclick="mostrarInfoGarantia()"><span>🛡️</span> Garantías y seguros</div>
+            <div class="pm-item pm-logout" onclick="cerrarSesion()"><span>🚪</span> Cerrar sesión</div>
+          </div>
+        </div>
+      </div>
+
+    </div><nav class="bottom-nav" id="bottomNav" style="display:none">
+      <button class="bn-item active" data-tab="explorar" onclick="setTab('explorar',this)">
+        <span class="bn-icon">🏠</span><span class="bn-label">Explorar</span>
+      </button>
+      <button class="bn-item" data-tab="arriendos" onclick="setTab('arriendos',this)">
+        <span class="bn-icon">📋</span><span class="bn-label">Arriendos</span>
+      </button>
+      <button class="bn-item bn-center" data-tab="publicar" onclick="setTab('publicar',this)">
+        <span class="bn-icon-center">+</span>
+      </button>
+      <button class="bn-item" data-tab="mensajes" onclick="setTab('mensajes',this)">
+        <span class="bn-icon">💬</span><span class="bn-label">Chat</span>
+        <span class="bn-badge" id="msgBadge" style="display:none;">0</span>
+      </button>
+      <button class="bn-item" data-tab="perfil" onclick="setTab('perfil',this)">
+        <span class="bn-icon">👤</span><span class="bn-label">Perfil</span>
+      </button>
+    </nav>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="cerrarModal()">
+      <div class="bottom-sheet-modal" id="bsModal" onclick="event.stopPropagation()">
+        <div class="bsm-handle"></div>
+        <div class="bsm-content" id="bsmContent"></div>
+      </div>
+    </div>
+
+    <div class="confirm-dialog-overlay" id="confirmDialogOverlay">
+      <div class="confirm-dialog" id="confirmDialog">
+        <div class="cd-icon" id="cdIcon">📦</div>
+        <h3 class="cd-title" id="cdTitle">Confirmar</h3>
+        <p class="cd-text" id="cdText"></p>
+        
+        <div id="cdAlert" style="display:none; background:rgba(255,92,0,0.1); border:1px solid var(--orange); color:var(--orange); padding:10px; border-radius:8px; font-size:12px; font-weight:600; margin-bottom:12px; text-align:center;">
+          ⚠️ Recuerda revisar bien el estado del objeto antes de proceder.
+        </div>
+        
+        <div class="cd-code-wrap" id="cdCodeWrap" style="display:none">
+          <div class="cd-code-label">Código de entrega</div>
+          <div class="cd-code" id="cdCode"></div>
+          <p class="cd-code-hint" style="font-size:12px; color:var(--muted); margin-top:8px;">Muestra este código al dueño para iniciar el arriendo.</p>
+        </div>
+        
+        <div class="cd-input-wrap" id="cdInputWrap" style="display:none">
+          <label class="cd-input-label">Ingresa el código del arrendatario</label>
+          <input type="text" id="cdCodeInput" class="cd-input" placeholder="Ej: 1234" maxlength="4"/>
+        </div>
+        
+        <div class="cd-btns">
+          <button class="cd-btn cancel" id="cdCancel" onclick="cerrarConfirmDialog()">Cancelar</button>
+          <button class="cd-btn confirm" id="cdConfirm">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+  </div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
